@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cliente Sore | Pagamento PIX</title>
+<title>Gerar | Pagamento PIX</title>
 
 <style>
 :root {
@@ -204,7 +204,7 @@ button:disabled {
 <main class="card">
 
   <div class="row">
-    <h1>Cliente Sore</h1>
+    <h1>Gerar</h1>
     <span class="tag">PIX</span>
   </div>
 
@@ -300,21 +300,11 @@ button:disabled {
 
   <div class="status hidden" id="notice" role="status"></div>
 
-  <p class="foot">
-    Pagador: Cliente Sore.
-    Documento: 000.000.000-11.
-    A confirmação depende da API MisticPay.
-  </p>
-
 </main>
 
 <script>
 (() => {
   'use strict';
-
-  // ========================================
-  // CONFIGURAÇÃO DA API MISTICPAY
-  // ========================================
 
   const API = 'https://api.misticpay.com/api';
 
@@ -327,15 +317,9 @@ button:disabled {
   const PAYER_NAME = 'Cliente Sore';
   const PAYER_DOCUMENT = '00000000011';
 
-  // Taxa fixa de R$ 1,00
   const FEE_CENTS = 100;
 
-  // Verificação a cada 5 segundos
   const CHECK_INTERVAL = 5000;
-
-  // ========================================
-  // ELEMENTOS E VARIÁVEIS
-  // ========================================
 
   const $ = id => document.getElementById(id);
 
@@ -379,19 +363,11 @@ button:disabled {
     $('notice').classList.add('hidden');
   }
 
-  // ========================================
-  // AUTENTICAÇÃO
-  // ========================================
-
   function auth() {
     const credentials = CLIENT_ID + ':' + CLIENT_SECRET;
 
     return 'Basic ' + btoa(credentials);
   }
-
-  // ========================================
-  // REQUISIÇÕES PARA API
-  // ========================================
 
   async function request(route, body) {
     let response;
@@ -434,10 +410,6 @@ button:disabled {
     return json;
   }
 
-  // ========================================
-  // CALCULAR VALOR + TAXA
-  // ========================================
-
   $('amount').addEventListener('input', () => {
     const cents = parseCents($('amount').value);
 
@@ -448,10 +420,6 @@ button:disabled {
     $('totalDisplay').textContent =
       money(base + FEE_CENTS);
   });
-
-  // ========================================
-  // GERAR COBRANÇA PIX
-  // ========================================
 
   $('create').addEventListener('click', async () => {
 
@@ -552,10 +520,6 @@ button:disabled {
     }
   });
 
-  // ========================================
-  // EXIBIR STATUS
-  // ========================================
-
   function setStatus(state) {
     const element = $('paymentStatus');
 
@@ -580,10 +544,6 @@ button:disabled {
       element.className = 'status';
     }
   }
-
-  // ========================================
-  // VERIFICAR PAGAMENTO
-  // ========================================
 
   async function checkPayment() {
 
@@ -635,10 +595,6 @@ button:disabled {
     }
   }
 
-  // ========================================
-  // COPIAR PIX
-  // ========================================
-
   $('copy').addEventListener('click', async () => {
 
     try {
@@ -660,10 +616,6 @@ button:disabled {
       $('copy').textContent = 'Copiar código PIX';
     }, 2200);
   });
-
-  // ========================================
-  // NOVA COBRANÇA
-  // ========================================
 
   $('new').addEventListener('click', () => {
 
