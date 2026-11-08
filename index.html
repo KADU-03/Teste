@@ -1,0 +1,685 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cliente Sore | Pagamento PIX</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0c1020;
+  --panel: #171d30;
+  --line: #2c3551;
+  --txt: #f7f9ff;
+  --mute: #a5b2ce;
+  --accent: #9d7bff;
+  --ok: #47d9ad;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: radial-gradient(
+    circle at 20% 0%,
+    #25214e 0%,
+    var(--bg) 48%
+  );
+  margin: 0;
+  min-height: 100vh;
+  color: var(--txt);
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  max-width: 500px;
+  width: 100%;
+  padding: 28px;
+  box-shadow: 0 22px 80px #0007;
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 27px;
+}
+
+p {
+  color: var(--mute);
+  margin: 8px 0 20px;
+  line-height: 1.5;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  color: #cbd5ec;
+  margin: 14px 0 7px;
+}
+
+input {
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid var(--line);
+  background: #10162a;
+  border-radius: 12px;
+  font: inherit;
+  color: var(--txt);
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--accent);
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 14px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.primary {
+  width: 100%;
+  color: #100c20;
+  background: linear-gradient(105deg, #a98bff, #70d8ec);
+  margin-top: 18px;
+}
+
+.second {
+  width: 100%;
+  background: #303957;
+  color: white;
+  margin-top: 10px;
+}
+
+.money {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+}
+
+.money:last-child {
+  border: 0;
+  font-weight: 800;
+  font-size: 19px;
+}
+
+.amountbox {
+  background: #111729;
+  border: 1px solid var(--line);
+  padding: 12px 16px;
+  border-radius: 14px;
+  margin-top: 17px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--mute);
+}
+
+.status {
+  padding: 12px;
+  background: #232c48;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.success {
+  background: #123f39;
+  color: #9ff5ce;
+}
+
+.fail {
+  background: #4b2632;
+  color: #ffc0c8;
+}
+
+.qr {
+  display: block;
+  width: min(260px, 90%);
+  height: auto;
+  aspect-ratio: 1;
+  background: white;
+  padding: 10px;
+  border-radius: 14px;
+  margin: 20px auto;
+}
+
+.hidden {
+  display: none;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag {
+  background: #3b2865;
+  color: #d3c4ff;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wrap {
+  overflow-wrap: anywhere;
+}
+
+.foot {
+  font-size: 11px;
+  margin: 12px 0 0;
+}
+
+#copyPaste {
+  font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<main class="card">
+
+  <div class="row">
+    <h1>Cliente Sore</h1>
+    <span class="tag">PIX</span>
+  </div>
+
+  <p>
+    Informe quanto deseja pagar. Será adicionada
+    uma taxa fixa de R$ 1,00.
+  </p>
+
+  <section id="start">
+
+    <label for="amount">Valor desejado (R$)</label>
+
+    <input
+      id="amount"
+      inputmode="decimal"
+      placeholder="Ex.: 10,00"
+      autocomplete="off"
+    >
+
+    <div class="amountbox">
+
+      <div class="money">
+        <span>Valor escolhido</span>
+        <strong id="baseDisplay">R$ 0,00</strong>
+      </div>
+
+      <div class="money">
+        <span>Taxa de serviço</span>
+        <strong>R$ 1,00</strong>
+      </div>
+
+      <div class="money">
+        <span>Total a pagar</span>
+        <strong id="totalDisplay">R$ 1,00</strong>
+      </div>
+
+    </div>
+
+    <button class="primary" id="create">
+      Gerar QR Code PIX
+    </button>
+
+  </section>
+
+  <section id="payment" class="hidden">
+
+    <div class="amountbox">
+
+      <div class="money">
+        <span>Valor</span>
+        <strong id="payBase"></strong>
+      </div>
+
+      <div class="money">
+        <span>Taxa fixa</span>
+        <strong>R$ 1,00</strong>
+      </div>
+
+      <div class="money">
+        <span>Total do PIX</span>
+        <strong id="payTotal"></strong>
+      </div>
+
+    </div>
+
+    <img
+      class="qr hidden"
+      id="qr"
+      alt="QR Code PIX para pagamento"
+    >
+
+    <label for="copyPaste">
+      PIX copia e cola
+    </label>
+
+    <input id="copyPaste" readonly>
+
+    <button class="second" id="copy">
+      Copiar código PIX
+    </button>
+
+    <div class="status" id="paymentStatus">
+      Aguardando pagamento...
+    </div>
+
+    <p class="hint wrap" id="transactionRef"></p>
+
+    <button class="second" id="new">
+      Nova cobrança
+    </button>
+
+  </section>
+
+  <div class="status hidden" id="notice" role="status"></div>
+
+  <p class="foot">
+    Pagador: Cliente Sore.
+    Documento: 000.000.000-11.
+    A confirmação depende da API MisticPay.
+  </p>
+
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  // ========================================
+  // CONFIGURAÇÃO DA API MISTICPAY
+  // ========================================
+
+  const API = 'https://api.misticpay.com/api';
+
+  const CLIENT_ID =
+    'pk_5735c698aa18e8478ca1a67faee03454';
+
+  const CLIENT_SECRET =
+    'sk_ac1dc37c6939997fd64d6de58b351e3101efbe1ef0d166020669d344bc57b415';
+
+  const PAYER_NAME = 'Cliente Sore';
+  const PAYER_DOCUMENT = '00000000011';
+
+  // Taxa fixa de R$ 1,00
+  const FEE_CENTS = 100;
+
+  // Verificação a cada 5 segundos
+  const CHECK_INTERVAL = 5000;
+
+  // ========================================
+  // ELEMENTOS E VARIÁVEIS
+  // ========================================
+
+  const $ = id => document.getElementById(id);
+
+  let timer = null;
+  let activeId = null;
+  let working = false;
+  let checking = false;
+
+  function money(cents) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(cents / 100);
+  }
+
+  function parseCents(value) {
+    let s = String(value)
+      .trim()
+      .replace(/\s|R\$/gi, '');
+
+    if (!/^(\d{1,9})([.,]\d{1,2})?$/.test(s)) {
+      return NaN;
+    }
+
+    const parts = s.replace(',', '.').split('.');
+
+    return (
+      Number(parts[0]) * 100 +
+      Number((parts[1] || '').padEnd(2, '0'))
+    );
+  }
+
+  function show(message, error = true) {
+    const element = $('notice');
+
+    element.textContent = message;
+    element.className = 'status' + (error ? ' fail' : '');
+  }
+
+  function clearNotice() {
+    $('notice').classList.add('hidden');
+  }
+
+  // ========================================
+  // AUTENTICAÇÃO
+  // ========================================
+
+  function auth() {
+    const credentials = CLIENT_ID + ':' + CLIENT_SECRET;
+
+    return 'Basic ' + btoa(credentials);
+  }
+
+  // ========================================
+  // REQUISIÇÕES PARA API
+  // ========================================
+
+  async function request(route, body) {
+    let response;
+
+    try {
+      response = await fetch(API + route, {
+        method: 'POST',
+        headers: {
+          'Authorization': auth(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body),
+        cache: 'no-store'
+      });
+    } catch (error) {
+      throw new Error(
+        'Não foi possível conectar à API. ' +
+        'Verifique a conexão ou bloqueio de CORS.'
+      );
+    }
+
+    let json;
+
+    try {
+      json = await response.json();
+    } catch {
+      throw new Error(
+        'Resposta inválida da API. HTTP ' + response.status
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        json.message ||
+        json.code ||
+        'Falha HTTP ' + response.status
+      );
+    }
+
+    return json;
+  }
+
+  // ========================================
+  // CALCULAR VALOR + TAXA
+  // ========================================
+
+  $('amount').addEventListener('input', () => {
+    const cents = parseCents($('amount').value);
+
+    const base = Number.isFinite(cents) ? cents : 0;
+
+    $('baseDisplay').textContent = money(base);
+
+    $('totalDisplay').textContent =
+      money(base + FEE_CENTS);
+  });
+
+  // ========================================
+  // GERAR COBRANÇA PIX
+  // ========================================
+
+  $('create').addEventListener('click', async () => {
+
+    if (working) return;
+
+    clearNotice();
+
+    const cents = parseCents($('amount').value);
+
+    if (!Number.isSafeInteger(cents) || cents < 1) {
+      show('Informe um valor válido maior que zero.');
+      return;
+    }
+
+    const total = cents + FEE_CENTS;
+
+    try {
+      working = true;
+
+      $('create').disabled = true;
+      $('create').textContent = 'Gerando PIX...';
+
+      const transactionId =
+        'sore-' +
+        Date.now() +
+        '-' +
+        Math.random().toString(36).slice(2, 10);
+
+      const response = await request(
+        '/transactions/create',
+        {
+          amount: total / 100,
+          payerName: PAYER_NAME,
+          payerDocument: PAYER_DOCUMENT,
+          transactionId: transactionId,
+          description:
+            'Cobrança Cliente Sore: ' +
+            money(cents) +
+            ' + taxa ' +
+            money(FEE_CENTS)
+        }
+      );
+
+      const data = response.data || {};
+
+      const pix =
+        data.copyPaste ||
+        data.pixCopyPaste ||
+        '';
+
+      const qr =
+        data.qrCodeBase64 ||
+        data.qrcodeUrl ||
+        data.qrCodeUrl ||
+        '';
+
+      if (!pix) {
+        throw new Error(
+          'A API não retornou o código PIX copia e cola.'
+        );
+      }
+
+      activeId = String(
+        data.transactionId || transactionId
+      );
+
+      $('copyPaste').value = pix;
+
+      $('qr').classList.toggle('hidden', !qr);
+
+      if (qr) {
+        $('qr').src = qr;
+      }
+
+      $('payBase').textContent = money(cents);
+      $('payTotal').textContent = money(total);
+
+      $('transactionRef').textContent =
+        'Transação: ' + activeId;
+
+      $('start').classList.add('hidden');
+      $('payment').classList.remove('hidden');
+
+      setStatus('PENDENTE');
+
+      // Iniciar verificação automática
+      timer = setInterval(checkPayment, CHECK_INTERVAL);
+
+      checkPayment();
+
+    } catch (error) {
+      show(error.message);
+    } finally {
+      working = false;
+
+      $('create').disabled = false;
+      $('create').textContent = 'Gerar QR Code PIX';
+    }
+  });
+
+  // ========================================
+  // EXIBIR STATUS
+  // ========================================
+
+  function setStatus(state) {
+    const element = $('paymentStatus');
+
+    if (state === 'COMPLETO') {
+      element.textContent = '✓ Pagamento confirmado!';
+      element.className = 'status success';
+    } else if (
+      [
+        'FALHA',
+        'CANCELADO',
+        'DEVOLVIDO',
+        'DEVOLVIDO_PARCIAL'
+      ].includes(state)
+    ) {
+      element.textContent = 'Transação: ' + state;
+      element.className = 'status fail';
+    } else {
+      element.textContent =
+        '● Aguardando pagamento. ' +
+        'Verificando automaticamente...';
+
+      element.className = 'status';
+    }
+  }
+
+  // ========================================
+  // VERIFICAR PAGAMENTO
+  // ========================================
+
+  async function checkPayment() {
+
+    if (!activeId || checking) return;
+
+    checking = true;
+    const idBeingChecked = activeId;
+
+    try {
+      const result = await request(
+        '/transactions/check',
+        {
+          transactionId: idBeingChecked
+        }
+      );
+
+      if (activeId !== idBeingChecked) return;
+
+      const state = String(
+        result.transaction?.transactionState ||
+        result.data?.transactionState ||
+        'PENDENTE'
+      ).toUpperCase();
+
+      setStatus(state);
+
+      if (
+        state === 'COMPLETO' ||
+        [
+          'FALHA',
+          'CANCELADO',
+          'DEVOLVIDO',
+          'DEVOLVIDO_PARCIAL'
+        ].includes(state)
+      ) {
+        clearInterval(timer);
+        timer = null;
+      }
+
+    } catch (error) {
+      if (activeId === idBeingChecked) {
+        $('paymentStatus').textContent =
+          'Não foi possível consultar: ' + error.message;
+
+        $('paymentStatus').className = 'status fail';
+      }
+    } finally {
+      checking = false;
+    }
+  }
+
+  // ========================================
+  // COPIAR PIX
+  // ========================================
+
+  $('copy').addEventListener('click', async () => {
+
+    try {
+      await navigator.clipboard.writeText(
+        $('copyPaste').value
+      );
+
+      $('copy').textContent = 'Copiado!';
+
+    } catch {
+      $('copyPaste').focus();
+      $('copyPaste').select();
+
+      $('copy').textContent =
+        'Selecione e copie o código';
+    }
+
+    setTimeout(() => {
+      $('copy').textContent = 'Copiar código PIX';
+    }, 2200);
+  });
+
+  // ========================================
+  // NOVA COBRANÇA
+  // ========================================
+
+  $('new').addEventListener('click', () => {
+
+    clearInterval(timer);
+
+    timer = null;
+    activeId = null;
+
+    $('payment').classList.add('hidden');
+    $('start').classList.remove('hidden');
+
+    clearNotice();
+  });
+
+})();
+</script>
+
+</body>
+</html>
